@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 class Request extends Kohana_Request {
-    public static function factory($uri = TRUE, Cache $cache = NULL, $injected_routes = array()) {
+    public static function factory($uri = TRUE, HTTP_Cache $cache = NULL, $injected_routes = array()) {
         $method = $_SERVER['REQUEST_METHOD'];
-        $formal_config =  Kohana::config('rules');
+        $formal_config =  Kohana::$config->load('rules');
 
         if($method !== 'POST' || !array_key_exists('form_name', $_POST)) {
             // no post, just handle as normal
@@ -19,15 +19,14 @@ class Request extends Kohana_Request {
             // we've been here before. Do one final check before we can send the request through
             
             // validate the form;
-            $validation = Formal_Validation::instance();
-            $validation->register($_POST['form_name'], $_POST);
-            $validated = $validation->validate(true);
-            if($validated === true) {
+            $validation = Formal_Validation::instance()
+                    ->register($_POST['form_name'], $_POST);
+            if($validation->validate() === true) {
                 // form has been validated, let the controller handle the data!
                 return parent::factory($uri, $cache, $injected_routes);
             } else {
-                // darn! someone is trying to fuck around with us...
-                throw new HTTP_Exception_503('Are you trying to hack this?');
+                // darn! someone is trying to mess around with us...
+                throw new HTTP_Exception_503('Are you trying to hack this...?');
             }
         }
         

@@ -4,23 +4,21 @@ class Controller_Formal extends Controller {
     // is this a differed or direct request?
     private $differed = false;
     
-    public function before() {
+    protected function before() {
         parent::before();
         
-        // determine if request is direct or not
-        if(isset($this->request->differed) && $this->request->differed === true) {
-            $this->differed = true;
+        // check if a request to this controller was made only by Formal itself
+        if(!isset($this->request->differed) || $this->request->differed !== true) {
+            throw new HTTP_EXCEPTION_404();
         }
         
-        // determine if request is internal
+        // determine if request is internal, just an extra test...
         if(! $this->request->is_initial()) {
             $this->request->action('internal_'. $this->request->action());
         }
-        
-        // load config, validation object etc.
     }
     
-    public function action_validate() {
+    protected function internal_validate() {
         if(!$this->differed) {
             throw new HTTP_Exception_404('');
             exit;
