@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 class Request extends Kohana_Request {
-    protected final $_formal = true; // yep, now this is a formal request!
+    const _formal = true; // yep, now this is a formal request!
     protected $_validation;
     
     public static function factory($uri = TRUE, HTTP_Cache $cache = NULL, $injected_routes = array()) {
@@ -17,7 +17,8 @@ class Request extends Kohana_Request {
             // Formal needs at least the key of the form to be able to handle it!
             if($config['strict'] !== false) {
                 // Houston we've got a problem
-                throw new HTTP_Exception_500('This request cannot safely be handled');
+                echo 'This request cannot safely be handled';
+                exit;
             } else {
                 // Ah, you want some control yourself?
                 return parent::factory($uri, $cache, $injected_routes);
