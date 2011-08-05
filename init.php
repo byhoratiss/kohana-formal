@@ -14,3 +14,10 @@ Route::set('formal', 'formal(/<controller>(/<action>))')
             'controller' => 'home',
             'action' => 'index'
         ));
+
+Route::set('formal/assets', 'formal/assets/<file>', array('file' => '.+'))
+        ->defaults(array(
+            'directory' => 'formal',
+            'controller' => 'assets',
+            'action' => 'show'
+        ));

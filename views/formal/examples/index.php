@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"> 
     <head> 
         <title>Formal - Kohana Form handling module</title>
-        <script type="text/javascript" src="/assets/jquery.js"></script> 
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     </head>
     
     <body>
