@@ -4,7 +4,7 @@ class Controller_Formal extends Controller {
     // is this a differed or direct request?
     private $differed = false;
     
-    protected function before() {
+    function before() {
         parent::before();
         
         // check if a request to this controller was made only by Formal itself
@@ -18,7 +18,7 @@ class Controller_Formal extends Controller {
         }
     }
     
-    protected function internal_validate() {
+    function action_validate() {
         if(!$this->differed) {
             throw new HTTP_Exception_404('');
             exit;

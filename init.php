@@ -5,9 +5,12 @@ Route::set('formal/validate', 'formal/validate')->defaults(array(
     'action' => 'validate'
 ));
 
-Route::set('formal/examples', 'formal/examples(/<action>)')
+/* All routes below is only needed for examples and documentation, you can 
+ * remove them for production applications.
+ */
+Route::set('formal', 'formal(/<controller>(/<action>))')
         ->defaults(array(
             'directory' => 'formal',
-            'controller' => 'examples',
+            'controller' => 'home',
             'action' => 'index'
         ));
