@@ -47,7 +47,7 @@ class Formal_Validation {
     
     private function __construct() {
         // load configuration
-        $message_conf = Kohana::config('messages');
+        $message_conf = Kohana::$config->load('messages');
         // load messages
         $messages = $message_conf['messages'];
         if(!is_array($messages) || empty($messages)) {
@@ -79,7 +79,7 @@ class Formal_Validation {
         
         $this->form = ($form!==null)?$form:'noformfound';
         
-        $rules_config = Kohana::config('rules');
+        $rules_config = Kohana::$config->load('rules');
         if(!isset($rules_config[$this->form])) {
             $this->set_message('No config for form ['. $form .'] found!');
             return $this->report('error');
@@ -134,6 +134,10 @@ class Formal_Validation {
         $this->registered = true;
 
         return $this;
+    }
+    
+    function registered() { 
+        return ($this->registered === true);
     }
     
     /**

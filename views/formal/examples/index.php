@@ -13,12 +13,12 @@
         <div class="formal-messages"></div>
         <?php echo Formal_Tools::form_open(Route::get('formal')->uri(), 'examples'); ?>
             <fieldset>
-                Input 1: <input type="text" name="input_1" /> <br />
-                Input 2: <input type="text" name="input_1" /> <br />
-                Input 3: <input type="text" name="input_1" /> <br />
-                Input 4: <input type="text" name="input_1" /> <br />
-                Input 5: <input type="text" name="input_1" /> <br />
-                Input 6: <input type="text" name="input_1" /> <br />
+                Input 1: <input type="text" name="input1" /> <br />
+                Input 2: <input type="text" name="input2" /> <br />
+                Input 3: <input type="text" name="input3" /> <br />
+                Input 4: <input type="text" name="input4" /> <br />
+                Input 5: <input type="text" name="input5" /> <br />
+                Input 6: <input type="text" name="input6" /> <br />
                 
                 <button type="submit">Validate and submit!</button>
             </fieldset>

@@ -44,8 +44,12 @@
             report: function(data) {
                 // reset error reports
                 methods.clearErrors();
+                try {
+                    var result = $.parseJSON(data);
+                } catch (e) {
+                    methods.reportPane('{status: "error", errors: ["Got an invalid response: [' + data + ']"]"}');
+                }
 
-                var result = $.parseJSON(data);
                 if(result.status == 'ok') {
                     if(settings.afterSubmit == 'report') {
                         methods.reportSuccess(result);

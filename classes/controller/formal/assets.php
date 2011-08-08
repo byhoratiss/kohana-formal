@@ -16,6 +16,13 @@ class Controller_Formal_Assets extends Controller {
             exit;
         }
         
+        // determine MIME type
+        $parts = explode('.', $this->request->param('file'));
+        $ext = array_pop($parts);
+        $mime_type = File::mime_by_ext($ext);
+        
+        $this->response->headers('Content-type', $mime_type);
+        
         $this->response->body($view);
     }
 }

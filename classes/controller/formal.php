@@ -8,7 +8,7 @@ class Controller_Formal extends Controller {
         parent::before();
         
         // check if a request to this controller was made only by Formal itself
-        if(!isset($this->request->differed) || $this->request->differed !== true) {
+        if(!$this->request->_validation->registered()) {
             throw new HTTP_EXCEPTION_404();
         }
         
@@ -18,16 +18,8 @@ class Controller_Formal extends Controller {
         }
     }
     
-    function action_validate() {
-        if(!$this->differed) {
-            throw new HTTP_Exception_404('');
-            exit;
-        }
-        
+    function action_validate() {        
         // do the validation and print out the result
-        $validation = Formal_Validation::instance();
-        
-        $validation->register($this->request->post('form_name'), $_POST);
-        echo $validation->validate();
+        echo $this->request->_validation->validate();
     }
 }

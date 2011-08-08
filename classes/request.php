@@ -2,13 +2,13 @@
 
 class Request extends Kohana_Request {
     const _formal = true; // yep, now this is a formal request!
-    protected $_validation;
+    var $_validation;
     
     public static function factory($uri = TRUE, HTTP_Cache $cache = NULL, $injected_routes = array()) {
         $config =  Kohana::$config->load('formal'); // we're gonna need them
         $rules = Kohana::$config->load('rules');
 
-        if($_SERVER['REQUEST_METHOD'] !== 'POST' || !array_key_exists('form_name', $_POST)) {
+        if($_SERVER['REQUEST_METHOD'] !== 'POST') {
             // This isn't a POST request, Kohana should handle the request as normal
             return parent::factory($uri, $cache, $injected_routes);
         }
@@ -25,16 +25,18 @@ class Request extends Kohana_Request {
             }
         }
         
-        // Let's validate the form!
-        $this->_validation = Formal_Validation::instance()
+        // Let's validate the form! Note that the current validation instance is
+        // added to the request for later use.
+        $validation = Formal_Validation::instance()
                     ->register($_POST['formal_key'], $_POST);
-        if($this->_validation->validate() === true) {
+        if($validation->validate(true) === true) {
             // form has been validated, pass through this request!!
-            return parent::factory($uri, $cache, $injected_routes);
+            $request =  parent::factory($uri, $cache, $injected_routes);
+            $request->_validation = $validation;
+            return $request;
         }
         
-        // some user input is wrong, let formal handle this!
-        $uri = 'formal/validate';
-        return parent::factory($uri, $cache, $injected_routes);
+        echo $validation->report();
+        exit;
     }
 }

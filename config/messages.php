@@ -2,12 +2,13 @@
 
 return array(
     'messages' => array(
-        'required' => '%s is een verplicht veld',
-        'min' => '%s kan niet kleiner zijn dan: %s',
-        'max' => '%s kan niet groter zijn dan: %s',
-        'set' => '%s heeft geen geldige waarde',
-        'email' => '%s: Geen geldig e-mail adres',
-        'regex' => '%s niet in geldig formaat: %s',
-        'date' => '%s is geen geldige datum/tijd'
+        'required' => '%s is a required field',
+        'min' => '%s can not be less than: %s',
+        'max' => '%s can not be greater than: %s',
+        'set' => '%s does not contain a valid value',
+        'email' => '%s is not a valid e-mail address',
+        'regex' => '%s is not formatted properly: %s',
+        'date' => '%s is not a valid date/time string',
+        'numeric' => '%s is not a numeric value'
     )
 );

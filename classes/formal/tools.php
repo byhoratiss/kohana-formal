@@ -17,7 +17,7 @@ class Formal_Tools {
         $js = html::script(Kohana::$config->load('formal.formal_js_url')) ."\n";
         $js .= '<script type="text/javascript">jQuery(document).ready(function($) { $("#'. $form_name .'").formal('.$formal_settings .'); });</script>';
         $js .= form::open($target, array('name' => $form_name, 'id' => $form_name));
-        $js .= '<input type="hidden" name="form_name" value="'. $form_name .'" />';
+        $js .= '<input type="hidden" name="formal_key" value="'. $form_name .'" />';
         return $js;
     }
 }

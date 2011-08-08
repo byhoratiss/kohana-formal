@@ -10,7 +10,7 @@
         <h1>Content</h1>
         <ul>
             <li>
-                <a href="<?php echo Route::get('formal')->
+                <a href="<?php echo URL::base() . Route::get('formal')->
                         uri(array('controller' => 'examples')); ?>">
                     Examples
                 </a>
