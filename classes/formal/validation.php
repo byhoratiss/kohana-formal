@@ -1,62 +1,69 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-
+/**
+ * Main validation interface
+ *
+ * @package    Kohana/Formal
+ * @author     WGioG
+ * @copyright  (c) 2011 WGioG
+ * @license    http://www.gnu.org/licenses/gpl.txt
+ */
 class Formal_Validation {
+    const FORMAL_STATE_OK = 0,
+            FORMAL_STATE_NOT_INITIALIZED = 1,
+            FORMAL_STATE_REGISTERED = 2,
+            FORMAL_STATE_NOTICE = 3,
+            FORMAL_STATE_WARNING = 4,
+            FORMAL_STATE_ERROR = 5;
+    
     // singleton instance
     private static $instance;
     
     /**
+     * @var string Unique key of the currently loaded form
+     */
+    private $_key = null;
+    
+    /**
+     * @var array array of form fields (only registered fields are added)
+     */
+    private $_field_data = array();
+    
+    /**
+     * @var array form specific settings
+     */
+    private $_settings = array();
+    
+    /**
+     * @var array error message template by rule
+     */
+    private $_tpl_error_messages = array();
+    
+    /**
+     * @var array messages sent back to the frontend controller
+     */
+    private $_messages = array();
+    
+    /**
+     * @var array custom data that will be sent back to the frontend controller
+     */
+    private $_custom_data = array();
+    
+    /**
      * @var boolean Has the form been registered?
      */
-    private $registered = false;
+    private $_registered = false;
     
     /**
-     * @var string Name of the form which we want to validate
+     * @var boolean Has the form been validated?
      */
-    private $form;
+    private $_validated = false;
     
     /**
-     * @var Array All data in one place; field values, rules, and labels
+     * @var int current error level
      */
-    private $data;
+    private $_status = null;
     
-    /**
-     * @var array messages to parse for validation errors
-     */
-    private $messages;
-    
-    /**
-     * @var Array list of array messages
-     */
-    private $errors = array();
-    
-    /**
-     *
-     * @var type 
-     */
-    private $user_messages = array();
-    
-    /**
-     * @var Array generic settings for handling the form
-     */
-    private $settings = array();
-    
-    /**
-     * List of custom data. Will be set and returned when reporting.
-     */
-    private $custom_data = array();
-    
-    private function __construct() {
-        // load configuration
-        $message_conf = Kohana::$config->load('messages');
-        // load messages
-        $messages = $message_conf['messages'];
-        if(!is_array($messages) || empty($messages)) {
-            log_message('DEBUG', '[Formal] No error messages found');
-        } else {
-            $this->messages = $messages;
-            $this->messages['fields'] = array();
-        }
-    }
+    private function __construct() {}
     
     public static function instance() {
         if(!isset(self::$instance)) {
@@ -70,108 +77,118 @@ class Formal_Validation {
     /**
      * Load validation configuration and parse form data for the specific form.
      * 
-     * @param string $form name of the form
-     * @param array $post_data posted form data
+     * @param string $key (optional) unique key of the form
+     * @param array $post_data (optional) array consisting posted data
      */
-    public function register($form, $post_data) {
+    public function register($key=null, $post_data=null) {
         // reset, might have been registered before.
-        $this->registered = false;
+        $this->_registered = false;
+        $this->_validated = false;
         
-        $this->form = ($form!==null)?$form:'noformfound';
-        
-        $rules_config = Kohana::$config->load('rules');
-        if(!isset($rules_config[$this->form])) {
-            $this->set_message('No config for form ['. $form .'] found!');
-            return $this->report('error');
-            // TODO handle error gracefully
+        if(is_null($key) || empty($key)) {
+            // no key set, try to discover
+            if(!isset($_POST['formal_key']) && !empty($_POST['formal_key'])) {
+                $this->_key = $key;
+            } else {
+                $this->set_message(self::FORMAL_STATE_ERROR, 'Key could not be discovered');
+                return $this;
+            }
+        } else {
+            $this->_key = $key;
         }
         
-        if(array_key_exists('settings', $rules_config[$this->form])) {
-            $this->settings = $rules_config[$this->form]['settings'];
+        if(is_null($post_data)) {
+            if(empty($_POST)) {
+                $this->set_message(self::FORMAL_STATE_ERROR, 'No POST data found');
+                return $this;
+            }
+            $post_data = $_POST;
+        }
+        
+        // try to fetch form configuration
+        $form_configuration = Kohana::$config->load('formal/rules.'. $this->_key);
+        if(empty($form_configuration)) {
+            $this->set_message(self::FORMAL_STATE_ERROR, 'Configuration for form ['. $this->_key .'] could not be found');
+            return $this;
         }
         
         // merge post-data into the configuration. We do not care about
         // post-items which are not defined in the config, ignore them.
-        foreach($rules_config[$this->form] as $field => $config) {
+        foreach($form_configuration as $field => $field_config) {
             if($field == 'settings') {
+                // form specific settings
+                $this->_settings = $field;
                 continue;
             }
-            // set value
+            
+            $field_data = array();
+            
+            // set the field value
             if(!array_key_exists($field, $post_data) || empty($post_data[$field])) {
-                // TODO add log
-                $this->data[$field]['value'] = '';
+                $field_data['value'] = '';
             } else {
                 if(!is_array($post_data[$field])) {
-                    $this->data[$field]['value'] = trim($post_data[$field]);
+                    $field_data['value'] = trim($post_data[$field]);
                 } else {
-                    $this->data[$field]['value'] = $post_data[$field];
+                    $field_data['value'] = call_user_func('trim', $post_data[$field]);
                 }
             }
             
-            // set label
-            if(!array_key_exists('label', $config) || empty($config['label'])) {
-                $this->data[$field]['label'] = $field;
+            // set the label
+            if(!array_key_exists('label', $field_config) || empty($field_config['label'])) {
+                $field_data['label'] = $field;
             } else {
-                $this->data[$field]['label'] = $config['label'];
+                $field_data['label'] = $field_config['label'];
             }
             
-            // set specific messages
-            if(array_key_exists('messages', $config)) {
-                $this->data[$field]['messages'] = $config['messages'];
+            // set field specific error messages
+            if(!array_key_exists('messages', $field_config)) {
+                $field_data['messages'] = array();
+            } else {
+                $field_data['messages'] = $field_config['messages'];
             }
             
             // set rules
-            if(!array_key_exists('rules', $config)
-                    || !is_array($config['rules']) || empty($config['rules'])) {
-                // TODO add log
-                echo 'no rules found for field '. $field;
-                return false;
+            if(!array_key_exists('rules', $field_config)
+                    || !is_array($field_config['rules']) || empty($field_config['rules'])) {
+                $this->set_message(self::FORMAL_STATE_ERROR, 'no rules found for field ['. $field .'] of form ['. $this->_key .']');
+                return $this;
+            } else {
+                $field_data['rules'] = $field_config['rules'];
             }
-            $this->data[$field]['rules'] = $config['rules'];
+            
+            // add field data to pool
+            $this->_field_data[] = $field_data;
         }
         
         // loaded configuration and merged with post_data.
-        $this->registered = true;
+        $this->_registered = true;
 
         return $this;
-    }
-    
-    function registered() { 
-        return ($this->registered === true);
     }
     
     /**
      * Main interface; validate the form. Field-validation is being done in
      * @method validate_field()
      *
-     * @param boolean $return_boolean should a boolean or extended data be returned?
-     * @return boolean|JSON true/false or extended JSON data
+     * @return boolean
      */
     public function validate($return_boolean=false) {
-        if($this->registered !== true) {
-            $this->set_message('Form has not been registered...');
-            return $this->report('error');
-            // TODO handle gracefully
+        if($this->_registered !== true) {
+            $this->set_message(self::FORMAL_STATE_ERROR, 'Please first register the form');
+            return false;
         }
         
-        if(!is_array($this->data) || empty($this->data)) {
-            // no data found, probably a registered form which should not be checked for some obscure reason...
-            if($return_boolean === true) {
-                return (count($this->errors) == 0);
-            } else {
-                return $this->report();
-            }
-        }
         // loop through the rules and call each check for the specific form field
-        foreach($this->data as $field => $cfg) {
+        foreach($this->_field_data as $field => $cfg) {
             $this->validate_field($field, $cfg['value'], $cfg['rules'], $cfg['label']);
         }
 
-        if($return_boolean === true) {
-            return (count($this->errors) == 0);
-        } else {
-            return $this->report();
+        $report = $this->report(false);
+        if($report['status'] !== self::FORMAL_STATE_OK) {
+            return false;
         }
+        return true;
     }
     
     /**
@@ -193,15 +210,15 @@ class Formal_Validation {
                     array($value, $params)
                 );
                 if(!$passed) {
-                    $this->set_error($field, $label, $rule, $params);
+                    $this->set_error_message($field, $label, $rule, $params);
+                    return false;
                 }
             } else {
-                echo 'ERROR [Formal] No check found for rule ['.$rule.']';
-                // TODO handle gracefully
-                $this->set_error($field, $label, $rule, array());
+                $this->set_message(self::FORMAL_STATE_ERROR, 'Could not process rule ['. $rule .']: rule not known');
                 return false;
             }
         }
+        return true;
     }
     
     /**
@@ -212,51 +229,111 @@ class Formal_Validation {
      * @param string $rule the name of the rule
      * @param mixed|array $params array of parameters passed to the rule
      */
-    private function set_error($field, $label, $rule, $params) {
-        if(!array_key_exists($rule, $this->messages)) {
-            // TODO log_message('ERROR', '[Formal] No error message found for rule ['.$rule.']');
-            $mssg = 'An unknown error occured for field ['.$label.'] while parsing rule ['.$rule.']';
-        } else {
-            if(array_key_exists('messages', $this->data[$field]) && array_key_exists($rule, $this->data[$field]['messages'])) {
-                $mssg = sprintf($this->data[$field]['messages'][$rule], $label, $params);
-            } else {
-                $mssg = sprintf($this->messages[$rule], $label, $params);
-            }
+    private function set_error_message($field, $label, $rule, $params) {
+        if(array_key_exists('messages', $this->_field_data[$field]) 
+                && array_key_exists($rule, $this->_field_data[$field]['messages'])) {
+            return $this->set_message(
+                    self::FORMAL_STATE_ERROR, 
+                    sprintf($this->_field_data[$field]['messages'][$rule], $label, $params), 
+                    $field
+            );    
+        } else if(array_key_exists($rule, $this->_tpl_error_messages)) {
+            return $this->set_message(
+                    self::FORMAL_STATE_ERROR, 
+                    sprintf($this->_tpl_error_messages[$rule], $label, $params), 
+                    $field
+            );
         }
-        $this->errors[$field]['label'] = $label;
-        $this->errors[$field]['messages'][] = $mssg;
+        
+        return $this->set_message(
+                self::FORMAL_STATE_ERROR, 
+                'An unknown error occured for field ['.$label.'] while parsing rule ['.$rule.']',
+                $field
+        );
     }
     
     /**
-     * Save a message which will be sent back to the user after processing
+     * Save a message which will be processed by the frontend controller
      *
-     * @param string $message
+     * @param string $status what kind of message is this [error, warning, notice]
+     * @param string $message the message content
+     * @param string (optional) the form field this message relates to
      */
-    function set_message($message) {
-        $this->user_messages[] = $message;
+    function set_message($status, $message, $field=null) {
+        switch($status) {
+            case 'NOTICE':
+                $status = self::FORMAL_STATE_NOTICE;
+                break;
+            case 'WARNING':
+                $status = self::FORMAL_STATE_WARNING;
+                break;
+            case 'ERROR':
+            default:
+                $status = self::FORMAL_STATE_ERROR;
+                break;
+        }
+        $record = array(
+            'status' => $status,
+            'message' => $message,
+        );
+        if(!is_null($field) && !empty($field)) {
+            $record['field'] = $field;
+        }
+        
+        $this->_messages[] = $record;
+        
+        // adjust error level if needed;
+        $this->_status =($status > $this->_status)?$status:$this->_status;
+        
+        return $record;
     }
     
-    function report($override_status=null) {
-        if($override_status == 'ok' || $override_status == 'error') {
-            $report['status'] = $override_status;
+    function report($return_json=true) {
+        if($this->_status==null) {
+            if(count($this->_messages) > 0) {
+                $report['status'] = self::FORMAL_STATE_ERROR;
+            } else if(!$this->_registered) {
+                $report['status'] = self::FORMAL_STATE_NOT_INITIALIZED;
+            } else if(!$this->_validated) {
+                $report['status'] = self::FORMAL_STATE_REGISTERED;
+            } else {
+                // nothing wrong, or everything ok? :)
+                $report['status'] = self::FORMAL_STATE_OK;
+            }
         } else {
-            $report['status'] = (count($this->errors) == 0)?'ok':'error';
+            $report['status'] = $this->_status;
         }
-        $report['errors'] = $this->errors;
-        $report['messages'] = $this->user_messages;
-        $report['custom_data'] = $this->custom_data;
+        
+        $report['messages'] = $this->_messages;
+        $report['data'] = $this->data();
+        if(!$return_json) {
+            return $report;
+        }
         return json_encode($report);
     }
-
+    
+    /**************************** HELPER FUNCTIONS ****************************/
+    
     /**
-     * If you want custom data to be passed back to the page, add it through
-     * here
-     *
      * @param string $key
-     * @param string $value
+     * @param mixed $value
+     * @return mixed 
      */
-    function custom_data($key, $value) {
-        $this->custom_data[$key] = $value;
+    function data($key=null, $value=null) {
+        if(is_null($key)) {
+            // return all
+            return $this->_custom_data;
+        }
+        
+        if(is_null($value)) {
+            // act as a getter
+            if(!array_key_exists($key, $this->_custom_data)) {
+                return false;
+            }
+            return $this->_custom_data['key'];
+        }
+        
+        return $this->_custom_data['key'] = $value;
     }
     
     /************************ VALIDATION RULE METHODS *************************/

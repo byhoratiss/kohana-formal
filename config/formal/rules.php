@@ -1,7 +1,10 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 return array(
-    'examples' => array(        
+    'example' => array(
+        'settings' => array(),
+        
+        // validation rules
         'input1' => array(
             'label' => 'First input',
             'rules' => array('required' => true),

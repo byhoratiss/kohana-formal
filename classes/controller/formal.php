@@ -9,7 +9,7 @@ class Controller_Formal extends Controller {
         
         // check if a request to this controller was made only by Formal itself
         if(!$this->request->_validation->registered()) {
-            throw new HTTP_EXCEPTION_404();
+            throw new HTTP_EXCEPTION_404('No form found');
         }
         
         // determine if request is internal, just an extra test...
