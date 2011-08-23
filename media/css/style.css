@@ -1,0 +1,35 @@
+html { height: 100%;}
+body{margin:0;padding:0; height: 100%; background: #f6f6f6;  font-family:Arial;font-size:15px;color:#414141;}
+
+.clear{clear:both;}
+
+a{text-decoration:none;color:#1e90ff;}
+p{margin-bottom:10px;}
+strong{font-weight:bold;}
+select{background:#fff;}
+button{cursor:pointer;}
+h1,h2,h3,h4,h5,h6{color:#24abe2;text-transform:uppercase;}
+h1{font-size:14pt;border-bottom:2px solid #bbb;padding-bottom:5px;margin-bottom:20px;}
+h2{font-size:12pt;border-bottom:1px solid #bbb;padding-bottom:5px;margin-bottom:15px;}
+
+.container { width: 900px; margin: 0 auto 0; padding: 20px 20px 0; background: #fff; border-left: 1px solid #d8d8d8; border-right: 1px solid #d8d8d8; }
+
+input { background: #fff; border: 1px solid #ccc; -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; height: 42px; width: 386px; /*border: 1px solid #414141*/; }
+label { font-size: 16px;}
+fieldset .row { margin-bottom: 10px; }
+
+.button{background:url('../button_a.png') no-repeat top right;color:#414141;display:block;float:left;height:42px;padding:0 27px 0 0;border:0;margin-right:15px;}
+.button span{background:url('../button_span.png') no-repeat;display:block;padding:0 0 0 15px;line-height:42px;}
+.button:hover{background:url('../button_a_hover.png') no-repeat top right;}
+.button:hover span{background:url('../button_span_hover.png') no-repeat;}
+.button span img{vertical-align:middle;margin-right:10px;}
+
+/******************************************************************************/
+
+.left{float:left;}
+.right{float:right;}
+
+table.table-std{border:1px solid #d8d8d8;margin-top:30px;width:100%;margin-bottom:20px;}
+table.table-std th{background:#f6f6f6;border-bottom:1px solid #d8d8d8;padding:10px;}
+table.table-std td{padding:10px;color:#24abe2;}
+table.table-std tbody{border-top:1px solid #d8d8d8;}

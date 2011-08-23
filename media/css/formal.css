@@ -1,0 +1,10 @@
+.formal-messages { margin-bottom: 10px; margin-top: 10px; padding: 5px 35px; }
+.formal-messages.formal-pane-error { background: #fcd9ef url('../x_alt.png') 5px no-repeat; border: 1px solid #eb008b; }
+.formal-messages.formal-pane-success { background: #edf6e3 url('../check_alt_24x24.png') 5px no-repeat; color: #86c540; border: 1px solid #dbf3'd9;}
+
+input.formal-field-validated { background: url('../check_12x10.png') top right no-repeat !important; }
+input.formal-field-error { background: #fcd9ef url('../x_alt_12x12.png') top right no-repeat !important; border-color: #eb008b; }
+
+input.required { background: url('../star_8x8.png') top right no-repeat; }
+
+fieldset { width: 600px; }
