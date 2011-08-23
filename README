@@ -1,1 +1,1 @@
-Kohana module to handle form requests at the server side as well as the client side
+Kohana module to handle form requests at the server side as well as the client side, including form validation and client feedback. Check out the wiki for more info!
