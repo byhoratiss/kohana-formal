@@ -42,8 +42,8 @@ class Request extends Kohana_Request {
             $request->_formal = $_formal;
             
             if($request->is_ajax()) {
-                if($form_settings['afterSubmit'] == 'callback' ||
-                        $form_settings['afterSubmit'] == 'report') {
+                if(Arr::get($form_settings, 'afterSubmit') == 'callback' ||
+                        Arr::get($form_settings, 'afterSubmit') == 'report') {
                     return $request;
                 } else {
                     echo $_formal->report();

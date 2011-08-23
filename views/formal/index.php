@@ -52,29 +52,8 @@
             <?php if($validation->validate() == true): ?>
             <p>You have succesfully submitted the form with key [<?php echo $validation->key(); ?>]</p>
             <?php endif; ?>
-
+            
             <h2>Basic</h2>
-            <?php echo Formal_Tools::form_open(Route::get('formal')->uri(array(
-                    'controller' => 'examples', 
-                    'action' => 'process')),
-                'basic'); ?>
-            
-                <fieldset>
-                    <div class="formal-messages paneBasic"></div>
-                    
-                    <div class="row">
-                        <input type="text" name="input_field" rel="Just a string" class="required" />
-                    </div>
-                    <div class="row">
-                        <input type="text" name="email" rel="E-mail address" class="required" />
-                    </div>
-            
-                    <button type="submit" class="button"><span>Validate and submit!</span></button>
-                    <div class="clear"></div>
-                </fieldset>
-            </form>
-            
-            <h2>Basic with reporting on the same page</h2>
             <?php echo Formal_Tools::form_open(Route::get('formal')->uri(array(
                     'controller' => 'examples', 
                     'action' => 'process')),

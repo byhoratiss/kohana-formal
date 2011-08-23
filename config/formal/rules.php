@@ -2,23 +2,6 @@
 
 return array(
     
-    // just a simple example
-    'basic' => array(
-        'settings' => array(
-            'messagePane' => 'paneBasic',
-            'reportMethod' => array('field', 'pane')
-        ),
-        
-        'input_field' => array(
-            'label' => 'The first input field',
-            'rules' => array('required' => true),
-        ),
-        'email' => array(
-            'label' => 'E-mail address',
-            'rules' => array('required' => true, 'email' => true)
-        )
-    ),
-    
     'basic_callback' => array(
         'settings' => array(
             'messagePane' => 'paneBasicCallback',

@@ -39,8 +39,8 @@ class Controller_Formal_Examples extends Controller {
     
     function action_key_basic_callback() {
         $this->request->_formal->data('message', "\n\nHi thanks for posting! I"
-            . "will now start to abuse your e-mail address ["
-            . $this->request->post('email') ."]\nYours, the server"
+            . "now have your e-mail address: [" . $this->request->post('email') 
+            ."]\nYours, the server"
         );
     }
     
