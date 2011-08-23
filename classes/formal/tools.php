@@ -1,23 +1,55 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 class Formal_Tools {
-    static function form_open($target, $form_name, $settings=array()) {
+    static function form_open($target, $formal_key, $settings=array()) {
+        $form_settings = Kohana::$config->load('formal/rules.'. $formal_key .'.settings');
+        $form_settings = array_merge( (array)$form_settings, $settings );
+        
         // convert settings to javascript object
-        $formal_settings = '{';
+        $form_settings = self::to_javascript_object($form_settings);
+        
+        // insert Formal client side engine (javascript)
+        $js = html::script(Kohana::$config->load('formal.formal_js_url')) ."\n";
+        
+        $js .= '<script type="text/javascript">jQuery(document).ready(function($) { $("#'. $formal_key .'").formal('.$form_settings .'); });</script>';
+        $js .= form::open($target, array('name' => $formal_key, 'id' => $formal_key));
+        $js .= '<input type="hidden" name="formal_key" value="'. $formal_key .'" />';
+        return $js;
+    }
+    
+    static function to_javascript_object(array $arr) {
+        $obj = '{';
+        
         $first = true;
-        foreach($settings as $setting => $value) {
+        foreach($arr as $key => $value) {
             if($first !== true) {
-                $formal_settings .= ',';
+                $obj .= ',';
             }
-            $formal_settings .= $setting.':' . $value;
+            
+            if(is_array($value)) {
+                $arrf = true;
+                $ret_val = '[';
+                foreach($value as $val) {
+                    if($arrf !== true) $ret_val .= ',';
+                    
+                    $ret_val .= '\''. $val .'\'';
+                    $arrf = false;
+                }
+                
+                $value = $ret_val .']';
+            } else if(strpos ($value, '&') === 0) {
+                $value = substr($value, 1, strlen($value)-1); // a javascript callback, do not enclose
+            } else {
+                $value = "'". addslashes($value) ."'";
+            }
+            
+            
+            $obj .= $key.':' . $value;
+            
             $first = false;            
         }
-        $formal_settings .= '}';
+        $obj .= '}';
         
-        $js = html::script(Kohana::$config->load('formal.formal_js_url')) ."\n";
-        $js .= '<script type="text/javascript">jQuery(document).ready(function($) { $("#'. $form_name .'").formal('.$formal_settings .'); });</script>';
-        $js .= form::open($target, array('name' => $form_name, 'id' => $form_name));
-        $js .= '<input type="hidden" name="formal_key" value="'. $form_name .'" />';
-        return $js;
+        return $obj;
     }
 }

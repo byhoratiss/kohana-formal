@@ -2,7 +2,7 @@
 
 return array(
     /** general settings **/
-    'formal_js_url' => 'formal/assets/js/formal.js',
+    'formal_js_url' => 'formal/media/js/formal.js',
     
     /** customization **/
     

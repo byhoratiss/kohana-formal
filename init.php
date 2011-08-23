@@ -1,10 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-Route::set('formal/validate', 'formal/validate')->defaults(array(
-    'controller' => 'formal',
-    'action' => 'validate'
-));
-
 /* All routes below is only needed for examples and documentation, you can 
  * remove them for production applications.
  */
@@ -15,9 +10,9 @@ Route::set('formal', 'formal(/<controller>(/<action>))')
             'action' => 'index'
         ));
 
-Route::set('formal/assets', 'formal/assets/<file>', array('file' => '.+'))
+Route::set('formal/media', 'formal/media/<file>', array('file' => '.+'))
         ->defaults(array(
             'directory' => 'formal',
-            'controller' => 'assets',
-            'action' => 'show'
+            'controller' => 'media',
+            'action' => 'media'
         ));

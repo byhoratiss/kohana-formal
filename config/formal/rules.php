@@ -1,8 +1,63 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 return array(
-    'example' => array(
-        'settings' => array(),
+    
+    // just a simple example
+    'basic' => array(
+        'settings' => array(
+            'messagePane' => 'paneBasic',
+            'reportMethod' => array('field', 'pane')
+        ),
+        
+        'input_field' => array(
+            'label' => 'The first input field',
+            'rules' => array('required' => true),
+        ),
+        'email' => array(
+            'label' => 'E-mail address',
+            'rules' => array('required' => true, 'email' => true)
+        )
+    ),
+    
+    'basic_callback' => array(
+        'settings' => array(
+            'messagePane' => 'paneBasicCallback',
+            'afterSubmit' => 'callback',
+            'afterSubmitCallback' => '&customCallback'
+        ),
+        
+        'input_field' => array(
+            'label' => 'The first input field',
+            'rules' => array('required' => true)
+        ),
+        
+        'email' => array(
+            'label' => 'E-mail address',
+            'rules' => array('required' => true, 'email' => true)
+        )
+    ),
+    
+    'basic_report' => array(
+        'settings' => array(
+            'messagePane' => 'paneBasicReport',
+            'afterSubmit' => 'report'
+        ),
+        
+        'input_field' => array(
+            'label' => 'The first input field',
+            'rules' => array('required' => true)
+        ),
+        
+        'email' => array(
+            'label' => 'E-mail address',
+            'rules' => array('required' => true, 'email' => true)
+        )
+    ),
+    
+    'full' => array(
+        'settings' => array(
+            'messagePane' => 'paneFull'
+        ),
         
         // validation rules
         'input1' => array(
@@ -28,6 +83,6 @@ return array(
         'input6' => array(
             'label' => 'Sixth',
             'rules' => array('required' => true, 'date' => 'true')
-        ),
+        )
     )
 );

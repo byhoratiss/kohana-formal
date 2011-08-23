@@ -69,6 +69,7 @@ class Formal_Validation {
         if(!isset(self::$instance)) {
             $c = __CLASS__;
             self::$instance = new $c;
+            self::$instance->register();
         }
         
         return self::$instance;
@@ -76,40 +77,39 @@ class Formal_Validation {
     
     /**
      * Load validation configuration and parse form data for the specific form.
-     * 
-     * @param string $key (optional) unique key of the form
-     * @param array $post_data (optional) array consisting posted data
      */
-    public function register($key=null, $post_data=null) {
+    private function register() {
         // reset, might have been registered before.
         $this->_registered = false;
         $this->_validated = false;
         
-        if(is_null($key) || empty($key)) {
-            // no key set, try to discover
-            if(!isset($_POST['formal_key']) && !empty($_POST['formal_key'])) {
-                $this->_key = $key;
-            } else {
-                $this->set_message(self::FORMAL_STATE_ERROR, 'Key could not be discovered');
-                return $this;
-            }
+        // try to discover the key
+        if(isset($_POST['formal_key']) && !empty($_POST['formal_key'])) {
+            $this->_key = $_POST['formal_key'];
         } else {
-            $this->_key = $key;
+            $this->set_message(self::FORMAL_STATE_ERROR, 'Key could not be discovered');
+            return $this;
         }
-        
-        if(is_null($post_data)) {
-            if(empty($_POST)) {
-                $this->set_message(self::FORMAL_STATE_ERROR, 'No POST data found');
-                return $this;
-            }
-            $post_data = $_POST;
+
+        if(empty($_POST)) {
+            $this->set_message(self::FORMAL_STATE_ERROR, 'No POST data found');
+            return $this;
         }
+        $post_data = $_POST;
         
         // try to fetch form configuration
         $form_configuration = Kohana::$config->load('formal/rules.'. $this->_key);
         if(empty($form_configuration)) {
             $this->set_message(self::FORMAL_STATE_ERROR, 'Configuration for form ['. $this->_key .'] could not be found');
             return $this;
+        }
+        
+        // try to fetch error message templates
+        $message_templates = Kohana::$config->load('formal/messages');
+        if(empty($message_templates)) {
+            $this->set_message(self::FORMAL_STATE_WARNING, 'Could not find error templates');
+        } else {
+            $this->_tpl_error_messages = $message_templates;
         }
         
         // merge post-data into the configuration. We do not care about
@@ -158,7 +158,7 @@ class Formal_Validation {
             }
             
             // add field data to pool
-            $this->_field_data[] = $field_data;
+            $this->_field_data[$field] = $field_data;
         }
         
         // loaded configuration and merged with post_data.
@@ -179,16 +179,20 @@ class Formal_Validation {
             return false;
         }
         
+        if($this->_validated === true) return $this->_validated;
+        
+        // if nothing happens, everything is allright
+        $this->_status == self::FORMAL_STATE_OK;
+        
         // loop through the rules and call each check for the specific form field
         foreach($this->_field_data as $field => $cfg) {
-            $this->validate_field($field, $cfg['value'], $cfg['rules'], $cfg['label']);
+            $passed = $this->validate_field($field, $cfg['value'], $cfg['rules'], $cfg['label']);
         }
-
-        $report = $this->report(false);
-        if($report['status'] !== self::FORMAL_STATE_OK) {
-            return false;
+        
+        if($this->_status == self::FORMAL_STATE_OK) {
+            $this->_validated = true;
         }
-        return true;
+        return ($this->_status == self::FORMAL_STATE_OK);
     }
     
     /**
@@ -218,11 +222,13 @@ class Formal_Validation {
                 return false;
             }
         }
+        $this->set_message(self::FORMAL_STATE_OK, '', $field);
         return true;
     }
     
     /**
-     * If an error has been found, parse the error
+     * This function is used to create an error message in case a field fails
+     * to validate.
      *
      * @param string $field the name attribute of the form field
      * @param string $label the user readable label
@@ -260,18 +266,6 @@ class Formal_Validation {
      * @param string (optional) the form field this message relates to
      */
     function set_message($status, $message, $field=null) {
-        switch($status) {
-            case 'NOTICE':
-                $status = self::FORMAL_STATE_NOTICE;
-                break;
-            case 'WARNING':
-                $status = self::FORMAL_STATE_WARNING;
-                break;
-            case 'ERROR':
-            default:
-                $status = self::FORMAL_STATE_ERROR;
-                break;
-        }
         $record = array(
             'status' => $status,
             'message' => $message,
@@ -290,9 +284,7 @@ class Formal_Validation {
     
     function report($return_json=true) {
         if($this->_status==null) {
-            if(count($this->_messages) > 0) {
-                $report['status'] = self::FORMAL_STATE_ERROR;
-            } else if(!$this->_registered) {
+            if(!$this->_registered) {
                 $report['status'] = self::FORMAL_STATE_NOT_INITIALIZED;
             } else if(!$this->_validated) {
                 $report['status'] = self::FORMAL_STATE_REGISTERED;
@@ -306,13 +298,25 @@ class Formal_Validation {
         
         $report['messages'] = $this->_messages;
         $report['data'] = $this->data();
-        if(!$return_json) {
-            return $report;
-        }
-        return json_encode($report);
+
+        return (!$return_json)?$report:json_encode($report);
     }
     
     /**************************** HELPER FUNCTIONS ****************************/
+    
+    /**
+     * Get or set the formal key. If the key is set, this instance will be
+     * reregistered.
+     * 
+     * @param type $key
+     * @return type 
+     */
+    function key($key=null) {
+        if($key == null) {
+            return $this->_key;
+        }
+        return $this->register($key);
+    }
     
     /**
      * @param string $key
@@ -330,10 +334,17 @@ class Formal_Validation {
             if(!array_key_exists($key, $this->_custom_data)) {
                 return false;
             }
-            return $this->_custom_data['key'];
+            return $this->_custom_data[$key];
         }
         
-        return $this->_custom_data['key'] = $value;
+        return $this->_custom_data[$key] = $value;
+    }
+    
+    /**
+     * @return boolean 
+     */
+    function registered() {
+        return ($this->_registered === true);
     }
     
     /************************ VALIDATION RULE METHODS *************************/
