@@ -6,6 +6,7 @@
         <link rel="stylesheet" type="text/css" href="<?php echo URL::base() . Route::get('formal/media')->uri(array('file' => 'css/style.css')); ?>" />
         <link rel="stylesheet" type="text/css" href="<?php echo URL::base() . Route::get('formal/media')->uri(array('file' => 'css/formal.css')); ?>" />
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+
         <script type="text/javascript">
             function trim(value) {
                 value = value.replace(/^\s+/,''); 

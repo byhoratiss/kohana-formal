@@ -1,6 +1,8 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 class Formal_Tools {
+    private static $js_included = false;
+    
     static function form_open($target, $formal_key, $settings=array()) {
         $form_settings = Kohana::$config->load('formal/rules.'. $formal_key .'.settings');
         $form_settings = array_merge( (array)$form_settings, $settings );
@@ -8,8 +10,13 @@ class Formal_Tools {
         // convert settings to javascript object
         $form_settings = self::to_javascript_object($form_settings);
         
-        // insert Formal client side engine (javascript)
-        $js = html::script(Kohana::$config->load('formal.formal_js_url')) ."\n";
+        $js = '';
+        
+        if(self::$js_included !== true) {
+            // insert Formal client side engine (javascript)
+            $js .= html::script(Kohana::$config->load('formal.formal_js_url')) ."\n";
+            self::$js_included = true;
+        }
         
         $js .= '<script type="text/javascript">jQuery(document).ready(function($) { $("#'. $formal_key .'").formal('.$form_settings .'); });</script>';
         $js .= form::open($target, array('name' => $formal_key, 'id' => $formal_key));
